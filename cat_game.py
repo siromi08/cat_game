@@ -35,14 +35,19 @@ RED = (255, 0, 0)
 # 猫のキャラクター設定
 class Cat:
     def __init__(self):
-        self.width = 50
-        self.height = 50
+        self.width = 80  # 胴体を長くするために幅を増加
+        self.height = 35  # 高さを少し調整
         self.x = 100
         self.y = WINDOW_HEIGHT - self.height - 10
         self.velocity_y = 0
         self.is_jumping = False
         self.speed = 5
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        
+        # 猫の色
+        self.body_color = (255, 165, 0)  # オレンジ色
+        self.eye_color = (0, 200, 0)     # 緑色
+        self.nose_color = (255, 192, 203) # ピンク
 
     def jump(self):
         if not self.is_jumping:
@@ -62,8 +67,113 @@ class Cat:
 
         self.rect.y = self.y
 
-    def draw(self, screen):
-        pygame.draw.rect(screen, (255, 165, 0), self.rect)  # オレンジ色の四角で猫を表現
+    def draw(self, screen, camera_x):
+        # 画面上の描画位置を計算
+        screen_x = self.rect.x - camera_x
+        screen_y = self.rect.y
+
+        # 胴体（より長い楕円）
+        body_height = self.height - 5
+        pygame.draw.ellipse(screen, self.body_color, 
+                          (screen_x, screen_y + 10, self.width - 15, body_height))
+        
+        # 頭（より高い位置に、少し斜めに）
+        head_radius = 20
+        head_x = screen_x + self.width - 5  # 頭の位置を前側に
+        head_y = screen_y - 10  # 頭の位置を高く
+        pygame.draw.circle(screen, self.body_color, 
+                         (head_x, head_y + head_radius), head_radius)
+        
+        # 首（頭と胴体をつなぐ部分）- 頭の位置に合わせて調整
+        neck_points = [
+            (head_x - head_radius - 5, head_y + head_radius + 15),
+            (head_x - head_radius + 5, head_y + head_radius + 18),
+            (head_x - head_radius + 15, head_y + head_radius + 15)
+        ]
+        pygame.draw.polygon(screen, self.body_color, neck_points)
+        
+        # 耳（より自然な三角形）- 左耳
+        left_ear_points = [
+            (head_x - 8, head_y + 12),
+            (head_x - 18, head_y - 8),
+            (head_x + 2, head_y + 8)
+        ]
+        pygame.draw.polygon(screen, self.body_color, left_ear_points)
+        
+        # 耳の内側（ピンク）- 左
+        left_inner_ear_points = [
+            (head_x - 7, head_y + 10),
+            (head_x - 14, head_y - 4),
+            (head_x, head_y + 8)
+        ]
+        pygame.draw.polygon(screen, self.nose_color, left_inner_ear_points)
+        
+        # 耳（より自然な三角形）- 右耳
+        right_ear_points = [
+            (head_x + 8, head_y + 12),
+            (head_x + 18, head_y - 8),
+            (head_x - 2, head_y + 8)
+        ]
+        pygame.draw.polygon(screen, self.body_color, right_ear_points)
+        
+        # 耳の内側（ピンク）- 右
+        right_inner_ear_points = [
+            (head_x + 7, head_y + 10),
+            (head_x + 14, head_y - 4),
+            (head_x, head_y + 8)
+        ]
+        pygame.draw.polygon(screen, self.nose_color, right_inner_ear_points)
+        
+        # 目（左）- より詳細な表現
+        pygame.draw.ellipse(screen, self.eye_color, 
+                          (head_x - 10, head_y + head_radius - 8, 8, 12))
+        pygame.draw.circle(screen, (0, 0, 0), 
+                         (head_x - 6, head_y + head_radius - 2), 3)  # 瞳
+        pygame.draw.circle(screen, (255, 255, 255), 
+                         (head_x - 7, head_y + head_radius - 4), 2)  # ハイライト
+        
+        # 目（右）- より詳細な表現
+        pygame.draw.ellipse(screen, self.eye_color, 
+                          (head_x + 2, head_y + head_radius - 8, 8, 12))
+        pygame.draw.circle(screen, (0, 0, 0), 
+                         (head_x + 6, head_y + head_radius - 2), 3)  # 瞳
+        pygame.draw.circle(screen, (255, 255, 255), 
+                         (head_x + 5, head_y + head_radius - 4), 2)  # ハイライト
+        
+        # 鼻（より大きく）
+        pygame.draw.circle(screen, self.nose_color, 
+                         (head_x, head_y + head_radius + 2), 3)
+        
+        # ひげ（6本）
+        whisker_start_y = head_y + head_radius + 2
+        # 左側のひげ
+        pygame.draw.line(screen, (100, 100, 100), (head_x - 2, whisker_start_y), (head_x - 20, whisker_start_y - 5), 1)
+        pygame.draw.line(screen, (100, 100, 100), (head_x - 2, whisker_start_y), (head_x - 20, whisker_start_y), 1)
+        pygame.draw.line(screen, (100, 100, 100), (head_x - 2, whisker_start_y), (head_x - 20, whisker_start_y + 5), 1)
+        # 右側のひげ
+        pygame.draw.line(screen, (100, 100, 100), (head_x + 2, whisker_start_y), (head_x + 20, whisker_start_y - 5), 1)
+        pygame.draw.line(screen, (100, 100, 100), (head_x + 2, whisker_start_y), (head_x + 20, whisker_start_y), 1)
+        pygame.draw.line(screen, (100, 100, 100), (head_x + 2, whisker_start_y), (head_x + 20, whisker_start_y + 5), 1)
+        
+        # 足（4本）- より自然な位置に
+        leg_color = self.body_color
+        leg_width = 6
+        leg_height = 12
+        # 前足
+        pygame.draw.rect(screen, leg_color, (screen_x + 15, screen_y + self.height - 2, leg_width, leg_height))
+        pygame.draw.rect(screen, leg_color, (screen_x + 30, screen_y + self.height - 2, leg_width, leg_height))
+        # 後ろ足
+        pygame.draw.rect(screen, leg_color, (screen_x + self.width - 40, screen_y + self.height - 2, leg_width, leg_height))
+        pygame.draw.rect(screen, leg_color, (screen_x + self.width - 25, screen_y + self.height - 2, leg_width, leg_height))
+        
+        # 尻尾（より自然な曲線）
+        tail_points = [
+            (screen_x + 5, screen_y + self.height - 8),
+            (screen_x - 10, screen_y + self.height - 15),
+            (screen_x - 20, screen_y + self.height - 25),
+            (screen_x - 25, screen_y + self.height - 35)
+        ]
+        pygame.draw.lines(screen, self.body_color, False, tail_points, 4)
 
 # ゴール設定
 class Goal:
@@ -162,9 +272,8 @@ def main():
         # 描画
         background.draw(screen, camera_x)
         goal.draw(screen, camera_x)
-        # 猫の描画位置をカメラに合わせて調整
-        cat_screen_pos = pygame.Rect(cat.rect.x - camera_x, cat.rect.y, cat.rect.width, cat.rect.height)
-        pygame.draw.rect(screen, (255, 165, 0), cat_screen_pos)
+        # 猫の描画
+        cat.draw(screen, camera_x)
 
         # ゲームクリア時のメッセージ表示
         if game_clear:
