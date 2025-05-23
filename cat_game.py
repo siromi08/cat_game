@@ -56,7 +56,7 @@ class Goal:
     def __init__(self):
         self.width = 50
         self.height = 100
-        self.x = WINDOW_WIDTH * 2 - 100  # 画面の2倍の位置にゴールを設置
+        self.x = WINDOW_WIDTH * 4 - 100  # 画面の4倍の位置にゴールを設置（2倍から4倍に変更）
         self.y = WINDOW_HEIGHT - self.height - 10
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
@@ -84,6 +84,15 @@ class Background:
             pygame.Rect(1100, 350, 120, 200),
             pygame.Rect(1300, 380, 150, 170),
             pygame.Rect(1500, 420, 90, 130),
+            # さらに追加の家（より遠くに）
+            pygame.Rect(1700, 400, 100, 150),
+            pygame.Rect(1900, 350, 120, 200),
+            pygame.Rect(2100, 380, 150, 170),
+            pygame.Rect(2300, 420, 90, 130),
+            pygame.Rect(2500, 400, 100, 150),
+            pygame.Rect(2700, 350, 120, 200),
+            pygame.Rect(2900, 380, 150, 170),
+            pygame.Rect(3100, 420, 90, 130),
         ]
 
     def draw(self, screen, camera_x):
