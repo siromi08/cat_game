@@ -1,165 +1,156 @@
 import pygame
 import sys
-import os
 
-# ゲームの初期化
+# Pygameの初期化
 pygame.init()
 
 # 画面設定
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("猫のゴール冒険")
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+pygame.display.set_caption("猫の冒険")
 
 # 色の定義
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+BLUE = (135, 206, 235)
 RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-BROWN = (139, 69, 19)
 
-# 猫のクラス
+# フォントの設定
+font = pygame.font.Font(None, 74)
+
+# 猫のキャラクター設定
 class Cat:
-    def __init__(self):
-        self.width = 40
-        self.height = 40
-        self.x = 50
-        self.y = HEIGHT // 2
-        self.speed = 5
-        self.color = (255, 165, 0)  # オレンジ色
-    
-    def draw(self):
-        # 猫の体
-        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
-        # 猫の耳
-        pygame.draw.polygon(screen, self.color, [(self.x, self.y), (self.x + 10, self.y - 15), (self.x + 20, self.y)])
-        pygame.draw.polygon(screen, self.color, [(self.x + 20, self.y), (self.x + 30, self.y - 15), (self.x + 40, self.y)])
-        # 猫の目
-        pygame.draw.circle(screen, BLACK, (self.x + 10, self.y + 15), 5)
-        pygame.draw.circle(screen, BLACK, (self.x + 30, self.y + 15), 5)
-    
-    def move(self, keys):
-        if keys[pygame.K_LEFT] and self.x > 0:
-            self.x -= self.speed
-        if keys[pygame.K_RIGHT] and self.x < WIDTH - self.width:
-            self.x += self.speed
-        if keys[pygame.K_UP] and self.y > 0:
-            self.y -= self.speed
-        if keys[pygame.K_DOWN] and self.y < HEIGHT - self.height:
-            self.y += self.speed
-    
-    def get_rect(self):
-        return pygame.Rect(self.x, self.y, self.width, self.height)
-
-# 障害物クラス
-class Obstacle:
-    def __init__(self, x, y, width, height):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = BROWN
-    
-    def draw(self):
-        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
-    
-    def get_rect(self):
-        return pygame.Rect(self.x, self.y, self.width, self.height)
-
-# ゴールクラス
-class Goal:
     def __init__(self):
         self.width = 50
         self.height = 50
-        self.x = WIDTH - 100
-        self.y = HEIGHT - 100
-        self.color = GREEN
-    
-    def draw(self):
-        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
+        self.x = 100
+        self.y = WINDOW_HEIGHT - self.height - 10
+        self.velocity_y = 0
+        self.is_jumping = False
+        self.speed = 5
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+    def jump(self):
+        if not self.is_jumping:
+            self.velocity_y = -15
+            self.is_jumping = True
+
+    def move(self):
+        # 重力の適用
+        self.velocity_y += 0.8
+        self.y += self.velocity_y
+
+        # 地面との衝突判定
+        if self.y > WINDOW_HEIGHT - self.height - 10:
+            self.y = WINDOW_HEIGHT - self.height - 10
+            self.velocity_y = 0
+            self.is_jumping = False
+
+        self.rect.y = self.y
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, (255, 165, 0), self.rect)  # オレンジ色の四角で猫を表現
+
+# ゴール設定
+class Goal:
+    def __init__(self):
+        self.width = 50
+        self.height = 100
+        self.x = WINDOW_WIDTH * 2 - 100  # 画面の2倍の位置にゴールを設置
+        self.y = WINDOW_HEIGHT - self.height - 10
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+    def draw(self, screen, camera_x):
+        # カメラの位置を考慮してゴールを描画
+        goal_rect = pygame.Rect(self.x - camera_x, self.y, self.width, self.height)
+        pygame.draw.rect(screen, RED, goal_rect)
         # ゴールの旗
-        pygame.draw.polygon(screen, RED, [(self.x + 25, self.y), (self.x + 25, self.y - 30), (self.x + 45, self.y - 20), (self.x + 25, self.y - 10)])
-    
-    def get_rect(self):
-        return pygame.Rect(self.x, self.y, self.width, self.height)
+        flag_pole = [(self.x - camera_x, self.y), (self.x - camera_x, self.y + self.height)]
+        pygame.draw.lines(screen, (255, 255, 255), False, flag_pole, 3)
 
-# ゲームオブジェクトの作成
-cat = Cat()
-goal = Goal()
+# 背景クラス
+class Background:
+    def __init__(self):
+        self.width = WINDOW_WIDTH
+        self.height = WINDOW_HEIGHT
+        # 住宅地の背景を表現する簡単な図形
+        self.houses = [
+            pygame.Rect(100, 400, 100, 150),
+            pygame.Rect(300, 350, 120, 200),
+            pygame.Rect(500, 380, 150, 170),
+            pygame.Rect(700, 420, 90, 130),
+            # 追加の家（画面外）
+            pygame.Rect(900, 400, 100, 150),
+            pygame.Rect(1100, 350, 120, 200),
+            pygame.Rect(1300, 380, 150, 170),
+            pygame.Rect(1500, 420, 90, 130),
+        ]
 
-# 障害物の配置
-obstacles = [
-    Obstacle(200, 200, 100, 30),
-    Obstacle(400, 300, 30, 150),
-    Obstacle(500, 100, 30, 200),
-    Obstacle(300, 450, 200, 30),
-    Obstacle(600, 400, 100, 30)
-]
+    def draw(self, screen, camera_x):
+        # 空
+        screen.fill(BLUE)
+        # 地面
+        pygame.draw.rect(screen, (100, 200, 100), (0, WINDOW_HEIGHT - 10, WINDOW_WIDTH, 10))
+        # 家
+        for house in self.houses:
+            # カメラの位置を考慮して家を描画
+            house_rect = pygame.Rect(house.x - camera_x, house.y, house.width, house.height)
+            if -house.width <= house_rect.x <= WINDOW_WIDTH:  # 画面内の家のみ描画
+                pygame.draw.rect(screen, (200, 200, 200), house_rect)
+                # 屋根
+                points = [
+                    (house_rect.left, house_rect.top),
+                    (house_rect.left + house_rect.width // 2, house_rect.top - 30),
+                    (house_rect.right, house_rect.top)
+                ]
+                pygame.draw.polygon(screen, (139, 69, 19), points)
 
-# ゲームループ
-clock = pygame.time.Clock()
-game_over = False
-win = False
+def main():
+    clock = pygame.time.Clock()
+    cat = Cat()
+    background = Background()
+    goal = Goal()
+    camera_x = 0
+    game_clear = False
 
-def draw_text(text, size, x, y, color=WHITE):
-    font = pygame.font.SysFont(None, size)
-    text_surface = font.render(text, True, color)
-    text_rect = text_surface.get_rect(center=(x, y))
-    screen.blit(text_surface, text_rect)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP and not game_clear:
+                    cat.jump()
 
-while not game_over:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game_over = True
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r and (win or game_over):
-                # リセット
-                cat = Cat()
-                win = False
-                game_over = False
-    
-    if not win:
-        # 入力処理
-        keys = pygame.key.get_pressed()
-        cat.move(keys)
+        if not game_clear:
+            # キー入力の処理
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                cat.rect.x += cat.speed
+                camera_x = cat.rect.x - 100  # カメラは猫の位置に追従
+
+            # 猫の移動処理
+            cat.move()
+
+            # ゴール判定
+            if cat.rect.x >= goal.x:
+                game_clear = True
+
+        # 描画
+        background.draw(screen, camera_x)
+        goal.draw(screen, camera_x)
+        # 猫の描画位置をカメラに合わせて調整
+        cat_screen_pos = pygame.Rect(cat.rect.x - camera_x, cat.rect.y, cat.rect.width, cat.rect.height)
+        pygame.draw.rect(screen, (255, 165, 0), cat_screen_pos)
+
+        # ゲームクリア時のメッセージ表示
+        if game_clear:
+            clear_text = font.render("GAME CLEAR!", True, (255, 215, 0))
+            text_rect = clear_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+            screen.blit(clear_text, text_rect)
         
-        # 衝突判定
-        cat_rect = cat.get_rect()
-        
-        # 障害物との衝突
-        for obstacle in obstacles:
-            if cat_rect.colliderect(obstacle.get_rect()):
-                game_over = True
-        
-        # ゴールとの衝突
-        if cat_rect.colliderect(goal.get_rect()):
-            win = True
-    
-    # 描画
-    screen.fill(BLACK)
-    
-    # 障害物の描画
-    for obstacle in obstacles:
-        obstacle.draw()
-    
-    # ゴールの描画
-    goal.draw()
-    
-    # 猫の描画
-    cat.draw()
-    
-    # ゲームオーバーまたは勝利メッセージ
-    if game_over and not win:
-        draw_text("ゲームオーバー! Rキーでリスタート", 50, WIDTH // 2, HEIGHT // 2, RED)
-    
-    if win:
-        draw_text("ゴール達成! Rキーでリスタート", 50, WIDTH // 2, HEIGHT // 2, GREEN)
-    
-    # 操作方法の表示
-    draw_text("矢印キーで移動", 30, WIDTH // 2, 30)
-    
-    pygame.display.flip()
-    clock.tick(60)
+        pygame.display.flip()
+        clock.tick(60)
 
-pygame.quit()
-sys.exit()
+if __name__ == "__main__":
+    main()
