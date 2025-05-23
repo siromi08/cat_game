@@ -1,5 +1,10 @@
 import pygame
 import sys
+import os
+
+# 日本語表示のための環境変数設定
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+os.environ['LANG'] = 'ja_JP.UTF-8'
 
 # Pygameの初期化
 pygame.init()
@@ -8,15 +13,24 @@ pygame.init()
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-pygame.display.set_caption("猫の冒険")
+
+# タイトルを英語表記に変更
+pygame.display.set_caption("Cat Adventure")
+
+# 日本語フォントを直接指定
+FONT_PATH = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
+
+try:
+    # ゲーム内メッセージ用のフォントを作成
+    font = pygame.font.Font(FONT_PATH, 74)
+except Exception as e:
+    print(f"Warning: Error loading Japanese font: {e}")
+    font = pygame.font.Font(None, 74)
 
 # 色の定義
 WHITE = (255, 255, 255)
 BLUE = (135, 206, 235)
 RED = (255, 0, 0)
-
-# フォントの設定
-font = pygame.font.Font(None, 74)
 
 # 猫のキャラクター設定
 class Cat:
@@ -154,7 +168,17 @@ def main():
 
         # ゲームクリア時のメッセージ表示
         if game_clear:
-            clear_text = font.render("GAME CLEAR!", True, (255, 215, 0))
+            # 英語のメッセージをフォールバックとして用意
+            clear_text = font.render("Welcome Home!", True, (255, 215, 0))
+            
+            # 日本語フォントが利用可能かテスト
+            test_text = font.render("あ", True, (255, 215, 0))
+            test_width = test_text.get_width()
+            
+            # 日本語が正しく描画できる場合（幅が0より大きい）
+            if test_width > 0:
+                clear_text = font.render("おかえり！", True, (255, 215, 0))
+                
             text_rect = clear_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
             screen.blit(clear_text, text_rect)
         
