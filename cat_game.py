@@ -180,43 +180,124 @@ class Cat:
 # ゴール設定
 class Goal:
     def __init__(self):
-        self.width = 50
-        self.height = 100
-        self.x = WINDOW_WIDTH * 4 - 100  # 画面の4倍の位置にゴールを設置（2倍から4倍に変更）
-        self.y = WINDOW_HEIGHT - self.height - 10
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.width = 150  # 家の幅
+        self.height = 200  # 家の高さ
+        self.x = WINDOW_WIDTH * 4 - 300  # 画面の4倍の位置にゴールを設置
+        self.y = WINDOW_HEIGHT - self.height - 50  # 地面より少し上に配置
+        
+        # ドアの位置とサイズ（家の中央下部）
+        self.door_width = 50
+        self.door_height = 80
+        self.door_x = self.x + (self.width - self.door_width) // 2
+        self.door_y = self.y + self.height - self.door_height
+        
+        # 当たり判定用のドアの矩形
+        self.door_rect = pygame.Rect(self.door_x, self.door_y, self.door_width, self.door_height)
 
     def draw(self, screen, camera_x):
-        # カメラの位置を考慮してゴールを描画
-        door_x = self.x - camera_x
-        door_y = self.y
+        # カメラの位置を考慮して家を描画
+        house_x = self.x - camera_x
+        house_y = self.y
+        
+        # 家の本体（薄いベージュ色）
+        house_rect = pygame.Rect(house_x, house_y, self.width, self.height)
+        pygame.draw.rect(screen, (245, 222, 179), house_rect)
+        
+        # 屋根（茶色）
+        roof_points = [
+            (house_x, house_y),
+            (house_x + self.width // 2, house_y - 60),
+            (house_x + self.width, house_y)
+        ]
+        pygame.draw.polygon(screen, (139, 69, 19), roof_points)
+        
+        # 窓（上段）
+        window_width = 40
+        window_height = 50
+        window_margin = 20
+        
+        # 左の窓
+        left_window_x = house_x + window_margin
+        left_window_y = house_y + window_margin
+        pygame.draw.rect(screen, (173, 216, 230), (left_window_x, left_window_y, window_width, window_height))
+        
+        # 窓の格子（左）
+        pygame.draw.line(screen, (245, 222, 179), (left_window_x + window_width // 2, left_window_y),
+                         (left_window_x + window_width // 2, left_window_y + window_height), 2)
+        pygame.draw.line(screen, (245, 222, 179), (left_window_x, left_window_y + window_height // 2),
+                         (left_window_x + window_width, left_window_y + window_height // 2), 2)
+        
+        # 右の窓
+        right_window_x = house_x + self.width - window_width - window_margin
+        right_window_y = house_y + window_margin
+        pygame.draw.rect(screen, (173, 216, 230), (right_window_x, right_window_y, window_width, window_height))
+        
+        # 窓の格子（右）
+        pygame.draw.line(screen, (245, 222, 179), (right_window_x + window_width // 2, right_window_y),
+                         (right_window_x + window_width // 2, right_window_y + window_height), 2)
+        pygame.draw.line(screen, (245, 222, 179), (right_window_x, right_window_y + window_height // 2),
+                         (right_window_x + window_width, right_window_y + window_height // 2), 2)
+        
+        # 煙突
+        chimney_width = 20
+        chimney_height = 40
+        chimney_x = house_x + self.width - 40
+        chimney_y = house_y - 20
+        pygame.draw.rect(screen, (160, 82, 45), (chimney_x, chimney_y - chimney_height, chimney_width, chimney_height))
+        
+        # 煙
+        for i in range(3):
+            smoke_y = chimney_y - chimney_height - 10 - i * 15
+            smoke_x = chimney_x + chimney_width // 2 + (i % 2) * 5
+            smoke_size = 5 + i * 2
+            pygame.draw.circle(screen, (220, 220, 220), (smoke_x, smoke_y), smoke_size)
+        
+        # ドア（玄関扉）- ゴールの判定に使用
+        door_x = self.door_x - camera_x
+        door_y = self.door_y
         
         # ドアの枠（茶色）
-        door_frame = pygame.Rect(door_x - 10, door_y - 10, self.width + 20, self.height + 10)
-        pygame.draw.rect(screen, (139, 69, 19), door_frame)  # 茶色の枠
+        door_frame = pygame.Rect(door_x - 5, door_y - 5, self.door_width + 10, self.door_height + 5)
+        pygame.draw.rect(screen, (139, 69, 19), door_frame)
         
         # ドア本体（赤茶色）
-        door_rect = pygame.Rect(door_x, door_y, self.width, self.height)
-        pygame.draw.rect(screen, (165, 42, 42), door_rect)  # 赤茶色のドア
+        door_rect = pygame.Rect(door_x, door_y, self.door_width, self.door_height)
+        pygame.draw.rect(screen, (165, 42, 42), door_rect)
         
         # ドアノブ（金色）
-        doorknob_x = door_x + self.width - 15
-        doorknob_y = door_y + self.height // 2
-        pygame.draw.circle(screen, (255, 215, 0), (doorknob_x, doorknob_y), 5)  # 金色のドアノブ
-        
-        # ドアの装飾（窓のような四角形）
-        window_rect = pygame.Rect(door_x + 10, door_y + 15, self.width - 20, self.height // 3)
-        pygame.draw.rect(screen, (173, 216, 230), window_rect)  # 水色の窓
-        
-        # 窓の格子
-        pygame.draw.line(screen, (139, 69, 19), (door_x + self.width // 2, door_y + 15), 
-                         (door_x + self.width // 2, door_y + 15 + self.height // 3), 2)
-        pygame.draw.line(screen, (139, 69, 19), (door_x + 10, door_y + 15 + self.height // 6), 
-                         (door_x + 10 + self.width - 20, door_y + 15 + self.height // 6), 2)
+        doorknob_x = door_x + self.door_width - 10
+        doorknob_y = door_y + self.door_height // 2
+        pygame.draw.circle(screen, (255, 215, 0), (doorknob_x, doorknob_y), 5)
         
         # 玄関マット
-        mat_rect = pygame.Rect(door_x, door_y + self.height, self.width, 10)
-        pygame.draw.rect(screen, (50, 205, 50), mat_rect)  # 緑色のマット
+        mat_rect = pygame.Rect(door_x - 5, door_y + self.door_height, self.door_width + 10, 10)
+        pygame.draw.rect(screen, (50, 205, 50), mat_rect)
+        
+        # 家の周りの装飾
+        
+        # 左側の植木鉢
+        pot_width = 20
+        pot_height = 25
+        pot_x = house_x - pot_width - 10
+        pot_y = house_y + self.height - pot_height
+        pygame.draw.rect(screen, (160, 82, 45), (pot_x, pot_y, pot_width, pot_height))
+        
+        # 植木鉢の植物
+        plant_color = (34, 139, 34)
+        pygame.draw.circle(screen, plant_color, (pot_x + pot_width // 2, pot_y - 10), 15)
+        
+        # 右側の植木鉢
+        pot_x = house_x + self.width + 10
+        pygame.draw.rect(screen, (160, 82, 45), (pot_x, pot_y, pot_width, pot_height))
+        pygame.draw.circle(screen, plant_color, (pot_x + pot_width // 2, pot_y - 10), 15)
+        
+        # 郵便ポスト
+        mailbox_width = 15
+        mailbox_height = 30
+        mailbox_x = house_x - 40
+        mailbox_y = house_y + self.height - mailbox_height
+        pygame.draw.rect(screen, (70, 130, 180), (mailbox_x, mailbox_y, mailbox_width, mailbox_height))
+        pygame.draw.rect(screen, (50, 50, 50), (mailbox_x + mailbox_width // 2 - 2, mailbox_y + mailbox_height, 4, 20))
 
 # 背景クラス
 class Background:
@@ -285,21 +366,6 @@ class Background:
             (2800, 470, 40),
             (3000, 460, 55),
             (3200, 480, 45),
-        ]
-        
-        # 街灯のリスト (x, y)
-        self.streetlights = [
-            (150, 500),
-            (450, 500),
-            (750, 500),
-            (1050, 500),
-            (1350, 500),
-            (1650, 500),
-            (1950, 500),
-            (2250, 500),
-            (2550, 500),
-            (2850, 500),
-            (3150, 500),
         ]
         
         # 雲のリスト (x, y, width, height)
@@ -464,17 +530,6 @@ class Background:
                 doorknob_y = door_y + door_height // 2
                 pygame.draw.circle(screen, (255, 215, 0), (doorknob_x, doorknob_y), 3)
         
-        # 街灯
-        for light in self.streetlights:
-            x, y = light
-            light_x = x - camera_x
-            if -20 <= light_x <= WINDOW_WIDTH:
-                # 支柱
-                pygame.draw.rect(screen, (50, 50, 50), (light_x - 3, y - 80, 6, 80))
-                # ランプ部分
-                pygame.draw.circle(screen, (255, 255, 200), (light_x, y - 80), 10)
-                pygame.draw.circle(screen, (255, 255, 150), (light_x, y - 80), 5)
-        
         # 前景の草（装飾）
         for i in range(0, WINDOW_WIDTH + 100, 20):
             grass_x = i - (camera_x % 20)
@@ -510,8 +565,8 @@ def main():
             # 猫の移動処理
             cat.move()
 
-            # ゴール判定
-            if cat.rect.x >= goal.x:
+            # ゴール判定（猫がドアに到達したかどうか）
+            if cat.rect.x >= goal.door_x:
                 game_clear = True
 
         # 描画
