@@ -186,11 +186,35 @@ class Goal:
 
     def draw(self, screen, camera_x):
         # カメラの位置を考慮してゴールを描画
-        goal_rect = pygame.Rect(self.x - camera_x, self.y, self.width, self.height)
-        pygame.draw.rect(screen, RED, goal_rect)
-        # ゴールの旗
-        flag_pole = [(self.x - camera_x, self.y), (self.x - camera_x, self.y + self.height)]
-        pygame.draw.lines(screen, (255, 255, 255), False, flag_pole, 3)
+        door_x = self.x - camera_x
+        door_y = self.y
+        
+        # ドアの枠（茶色）
+        door_frame = pygame.Rect(door_x - 10, door_y - 10, self.width + 20, self.height + 10)
+        pygame.draw.rect(screen, (139, 69, 19), door_frame)  # 茶色の枠
+        
+        # ドア本体（赤茶色）
+        door_rect = pygame.Rect(door_x, door_y, self.width, self.height)
+        pygame.draw.rect(screen, (165, 42, 42), door_rect)  # 赤茶色のドア
+        
+        # ドアノブ（金色）
+        doorknob_x = door_x + self.width - 15
+        doorknob_y = door_y + self.height // 2
+        pygame.draw.circle(screen, (255, 215, 0), (doorknob_x, doorknob_y), 5)  # 金色のドアノブ
+        
+        # ドアの装飾（窓のような四角形）
+        window_rect = pygame.Rect(door_x + 10, door_y + 15, self.width - 20, self.height // 3)
+        pygame.draw.rect(screen, (173, 216, 230), window_rect)  # 水色の窓
+        
+        # 窓の格子
+        pygame.draw.line(screen, (139, 69, 19), (door_x + self.width // 2, door_y + 15), 
+                         (door_x + self.width // 2, door_y + 15 + self.height // 3), 2)
+        pygame.draw.line(screen, (139, 69, 19), (door_x + 10, door_y + 15 + self.height // 6), 
+                         (door_x + 10 + self.width - 20, door_y + 15 + self.height // 6), 2)
+        
+        # 玄関マット
+        mat_rect = pygame.Rect(door_x, door_y + self.height, self.width, 10)
+        pygame.draw.rect(screen, (50, 205, 50), mat_rect)  # 緑色のマット
 
 # 背景クラス
 class Background:
