@@ -166,14 +166,14 @@ class Cat:
         pygame.draw.rect(screen, leg_color, (screen_x + self.width - 40, screen_y + self.height - 2, leg_width, leg_height))
         pygame.draw.rect(screen, leg_color, (screen_x + self.width - 25, screen_y + self.height - 2, leg_width, leg_height))
         
-        # 尻尾（より自然な曲線）
+        # 尻尾（より自然な曲線）- さらに太さを増加
         tail_points = [
             (screen_x + 5, screen_y + self.height - 8),
             (screen_x - 10, screen_y + self.height - 15),
             (screen_x - 20, screen_y + self.height - 25),
             (screen_x - 25, screen_y + self.height - 35)
         ]
-        pygame.draw.lines(screen, self.body_color, False, tail_points, 4)
+        pygame.draw.lines(screen, self.body_color, False, tail_points, 12)
 
 # ゴール設定
 class Goal:
