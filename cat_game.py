@@ -386,38 +386,6 @@ class Goal:
         
         # 口（笑顔）
         pygame.draw.arc(screen, (255, 105, 180), (owner_x - 6, eye_y + 5, 12, 6), 0, 3.14, 2)
-        
-        # 「おかえり」の吹き出し
-        bubble_width = 70
-        bubble_height = 30
-        bubble_x = owner_x + 20
-        bubble_y = owner_y - 70
-        
-        # 吹き出しの本体
-        pygame.draw.ellipse(screen, (255, 255, 255), (bubble_x, bubble_y, bubble_width, bubble_height))
-        
-        # 吹き出しの尻尾
-        tail_points = [
-            (bubble_x + 10, bubble_y + bubble_height - 5),
-            (owner_x + 5, owner_y - 55),
-            (bubble_x + 20, bubble_y + bubble_height - 2)
-        ]
-        pygame.draw.polygon(screen, (255, 255, 255), tail_points)
-        
-        # 吹き出しの枠線
-        pygame.draw.ellipse(screen, (0, 0, 0), (bubble_x, bubble_y, bubble_width, bubble_height), 1)
-        
-        # 「おかえり」のテキスト
-        # フォントが利用可能かどうかをチェック
-        try:
-            small_font = pygame.font.Font(FONT_PATH, 16)
-            welcome_text = small_font.render("おかえり!", True, (0, 0, 0))
-        except:
-            small_font = pygame.font.Font(None, 16)
-            welcome_text = small_font.render("Welcome!", True, (0, 0, 0))
-        
-        text_rect = welcome_text.get_rect(center=(bubble_x + bubble_width // 2, bubble_y + bubble_height // 2))
-        screen.blit(welcome_text, text_rect)
 
 # 背景クラス
 class Background:
