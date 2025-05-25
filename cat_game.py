@@ -193,6 +193,10 @@ class Goal:
         
         # 当たり判定用のドアの矩形
         self.door_rect = pygame.Rect(self.door_x, self.door_y, self.door_width, self.door_height)
+        
+        # 飼い主さんのアニメーション用の変数
+        self.owner_animation_counter = 0
+        self.owner_wave_direction = 1  # 手を振る方向（1: 上がる, -1: 下がる）
 
     def draw(self, screen, camera_x):
         # カメラの位置を考慮して家を描画
@@ -298,6 +302,122 @@ class Goal:
         mailbox_y = house_y + self.height - mailbox_height
         pygame.draw.rect(screen, (70, 130, 180), (mailbox_x, mailbox_y, mailbox_width, mailbox_height))
         pygame.draw.rect(screen, (50, 50, 50), (mailbox_x + mailbox_width // 2 - 2, mailbox_y + mailbox_height, 4, 20))
+        
+        # 飼い主さんを描画（ドアの前に立っている）
+        owner_x = door_x - 30
+        owner_y = WINDOW_HEIGHT - 50  # 地面に立っているように調整
+        
+        # アニメーションカウンターの更新
+        self.owner_animation_counter += 1
+        if self.owner_animation_counter >= 30:
+            self.owner_animation_counter = 0
+            self.owner_wave_direction *= -1
+        
+        # 手を振るアニメーション（上下に動く）
+        arm_wave_offset = self.owner_animation_counter // 3 * self.owner_wave_direction
+        
+        # 頭（より自然な形状の楕円）
+        head_radius = 12
+        pygame.draw.ellipse(screen, (255, 218, 185), (owner_x - head_radius, owner_y - 65, head_radius * 2, head_radius * 2 + 2))
+        # 顔の輪郭をはっきりさせる
+        pygame.draw.ellipse(screen, (0, 0, 0), (owner_x - head_radius, owner_y - 65, head_radius * 2, head_radius * 2 + 2), 1)
+        
+        # 髪の毛（黒色に変更）
+        hair_color = (0, 0, 0)  # 黒色の髪
+        pygame.draw.arc(screen, hair_color, (owner_x - head_radius - 2, owner_y - 65 - 2, head_radius * 2 + 4, head_radius * 2 + 4), 3.14, 6.28, 3)
+        pygame.draw.line(screen, hair_color, (owner_x - head_radius, owner_y - 60), (owner_x - head_radius, owner_y - 50), 2)
+        pygame.draw.line(screen, hair_color, (owner_x + head_radius, owner_y - 60), (owner_x + head_radius, owner_y - 50), 2)
+        
+        # 首
+        neck_height = 5
+        pygame.draw.rect(screen, (255, 218, 185), (owner_x - 3, owner_y - 50, 6, neck_height))
+        
+        # 体（より自然な形状）
+        body_width = 24
+        body_height = 35
+        pygame.draw.rect(screen, (30, 144, 255), (owner_x - body_width // 2, owner_y - 45, body_width, body_height))  # 上半身（シャツ）
+        
+        # 下半身（ズボンやスカート）
+        pants_color = (0, 0, 139)  # 濃い青
+        pygame.draw.rect(screen, pants_color, (owner_x - body_width // 2, owner_y - 45 + body_height, body_width, 15))
+        
+        # 足（より自然な形状）
+        leg_width = 6
+        leg_height = 30
+        pygame.draw.rect(screen, (255, 218, 185), (owner_x - body_width // 2 + 3, owner_y - 45 + body_height + 15, leg_width, leg_height))  # 左足
+        pygame.draw.rect(screen, (255, 218, 185), (owner_x + body_width // 2 - 3 - leg_width, owner_y - 45 + body_height + 15, leg_width, leg_height))  # 右足
+        
+        # 靴
+        shoe_color = (0, 0, 0)  # 黒
+        pygame.draw.ellipse(screen, shoe_color, (owner_x - body_width // 2 + 2, owner_y - 45 + body_height + 15 + leg_height - 3, leg_width + 2, 6))  # 左靴
+        pygame.draw.ellipse(screen, shoe_color, (owner_x + body_width // 2 - 4 - leg_width, owner_y - 45 + body_height + 15 + leg_height - 3, leg_width + 2, 6))  # 右靴
+        
+        # 腕（より自然な形状）
+        arm_width = 5
+        arm_length = 20
+        
+        # 左腕
+        pygame.draw.rect(screen, (255, 218, 185), (owner_x - body_width // 2 - arm_width, owner_y - 40, arm_width, arm_length))
+        # 左手
+        pygame.draw.circle(screen, (255, 218, 185), (owner_x - body_width // 2 - arm_width + arm_width // 2, owner_y - 40 + arm_length), 4)
+        
+        # 右腕（アニメーション付き）
+        arm_angle = 0.3 - 0.2 * (arm_wave_offset / 10)  # 腕の角度（ラジアン）
+        arm_end_x = owner_x + body_width // 2 + arm_length * math.cos(arm_angle)
+        arm_end_y = owner_y - 40 + arm_length * math.sin(arm_angle)
+        
+        # 右腕の描画（回転を考慮）
+        pygame.draw.line(screen, (255, 218, 185), (owner_x + body_width // 2, owner_y - 40), (arm_end_x, arm_end_y), arm_width)
+        # 右手
+        pygame.draw.circle(screen, (255, 218, 185), (int(arm_end_x), int(arm_end_y)), 4)
+        
+        # 顔のパーツ（より詳細に）
+        eye_y = owner_y - 60
+        
+        # 目
+        pygame.draw.ellipse(screen, (255, 255, 255), (owner_x - 7, eye_y - 2, 5, 4))  # 左目の白目
+        pygame.draw.ellipse(screen, (255, 255, 255), (owner_x + 2, eye_y - 2, 5, 4))  # 右目の白目
+        pygame.draw.circle(screen, (50, 50, 150), (owner_x - 5, eye_y), 2)  # 左目の瞳
+        pygame.draw.circle(screen, (50, 50, 150), (owner_x + 4, eye_y), 2)  # 右目の瞳
+        
+        # 眉毛（黒色に変更）
+        pygame.draw.line(screen, (0, 0, 0), (owner_x - 8, eye_y - 5), (owner_x - 3, eye_y - 4), 1)  # 左眉
+        pygame.draw.line(screen, (0, 0, 0), (owner_x + 2, eye_y - 4), (owner_x + 7, eye_y - 5), 1)  # 右眉
+        
+        # 口（笑顔）
+        pygame.draw.arc(screen, (255, 105, 180), (owner_x - 6, eye_y + 5, 12, 6), 0, 3.14, 2)
+        
+        # 「おかえり」の吹き出し
+        bubble_width = 70
+        bubble_height = 30
+        bubble_x = owner_x + 20
+        bubble_y = owner_y - 70
+        
+        # 吹き出しの本体
+        pygame.draw.ellipse(screen, (255, 255, 255), (bubble_x, bubble_y, bubble_width, bubble_height))
+        
+        # 吹き出しの尻尾
+        tail_points = [
+            (bubble_x + 10, bubble_y + bubble_height - 5),
+            (owner_x + 5, owner_y - 55),
+            (bubble_x + 20, bubble_y + bubble_height - 2)
+        ]
+        pygame.draw.polygon(screen, (255, 255, 255), tail_points)
+        
+        # 吹き出しの枠線
+        pygame.draw.ellipse(screen, (0, 0, 0), (bubble_x, bubble_y, bubble_width, bubble_height), 1)
+        
+        # 「おかえり」のテキスト
+        # フォントが利用可能かどうかをチェック
+        try:
+            small_font = pygame.font.Font(FONT_PATH, 16)
+            welcome_text = small_font.render("おかえり!", True, (0, 0, 0))
+        except:
+            small_font = pygame.font.Font(None, 16)
+            welcome_text = small_font.render("Welcome!", True, (0, 0, 0))
+        
+        text_rect = welcome_text.get_rect(center=(bubble_x + bubble_width // 2, bubble_y + bubble_height // 2))
+        screen.blit(welcome_text, text_rect)
 
 # 背景クラス
 class Background:
