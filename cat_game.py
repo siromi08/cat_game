@@ -25,15 +25,48 @@ FONT_PATH = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
 try:
     # ゲーム内メッセージ用のフォントを作成
     font = pygame.font.Font(FONT_PATH, 74)
+    small_font = pygame.font.Font(FONT_PATH, 36)  # ゲームオーバー用の小さいフォント
 except Exception as e:
     print(f"Warning: Error loading Japanese font: {e}")
     font = pygame.font.Font(None, 74)
+    small_font = pygame.font.Font(None, 36)
 
 # 色の定義
 WHITE = (255, 255, 255)
 BLUE = (135, 206, 235)
 RED = (255, 0, 0)
 
+# ゲームの状態
+GAME_PLAYING = 0
+GAME_CLEAR = 1
+GAME_OVER = 2
+# 障害物クラス
+class Obstacle:
+    def __init__(self, x, y):
+        self.width = 20
+        self.height = 30
+        self.x = x
+        self.y = y - self.height  # 地面からの高さを調整
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+    
+    def draw(self, screen, camera_x):
+        # 画面上の描画位置を計算
+        screen_x = self.x - camera_x
+        
+        # 画面内にある場合のみ描画
+        if -self.width <= screen_x <= WINDOW_WIDTH:
+            # 空き缶の本体（シルバー）
+            can_color = (192, 192, 192)
+            pygame.draw.rect(screen, can_color, (screen_x, self.y, self.width, self.height))
+            
+            # 缶の上部（赤）
+            pygame.draw.rect(screen, (220, 50, 50), (screen_x, self.y, self.width, 5))
+            
+            # 缶の模様（簡易的なデザイン）
+            pygame.draw.rect(screen, (100, 100, 100), (screen_x, self.y + self.height // 2 - 5, self.width, 10))
+            
+            # 缶の影
+            pygame.draw.ellipse(screen, (100, 100, 100), (screen_x - 2, self.y + self.height - 3, self.width + 4, 6))
 # 猫のキャラクター設定
 class Cat:
     def __init__(self):
@@ -176,7 +209,6 @@ class Cat:
             (screen_x - 25, screen_y + self.height - 35)
         ]
         pygame.draw.lines(screen, self.body_color, False, tail_points, 12)
-
 # ゴール設定
 class Goal:
     def __init__(self):
@@ -386,7 +418,6 @@ class Goal:
         
         # 口（笑顔）
         pygame.draw.arc(screen, (255, 105, 180), (owner_x - 6, eye_y + 5, 12, 6), 0, 3.14, 2)
-
 # 背景クラス
 class Background:
     def __init__(self):
@@ -625,14 +656,23 @@ class Background:
                 grass_height = random.randint(5, 15)
                 pygame.draw.line(screen, (50, 150, 50), (grass_x, WINDOW_HEIGHT - 50), 
                                 (grass_x, WINDOW_HEIGHT - 50 - grass_height), 2)
-
 def main():
     clock = pygame.time.Clock()
     cat = Cat()
     background = Background()
     goal = Goal()
+    
+    # 障害物を配置（5つの空き缶）
+    obstacles = [
+        Obstacle(400, WINDOW_HEIGHT - 10),   # 最初の障害物
+        Obstacle(700, WINDOW_HEIGHT - 10),   # 2つ目の障害物
+        Obstacle(1200, WINDOW_HEIGHT - 10),  # 3つ目の障害物
+        Obstacle(1800, WINDOW_HEIGHT - 10),  # 4つ目の障害物
+        Obstacle(2500, WINDOW_HEIGHT - 10),  # 5つ目の障害物
+    ]
+    
     camera_x = 0
-    game_clear = False
+    game_state = GAME_PLAYING
 
     while True:
         for event in pygame.event.get():
@@ -640,10 +680,16 @@ def main():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP and not game_clear:
+                if event.key == pygame.K_UP and game_state == GAME_PLAYING:
                     cat.jump()
+                # Rキーでゲームをリセット
+                if event.key == pygame.K_r and (game_state == GAME_CLEAR or game_state == GAME_OVER):
+                    # ゲームをリセット
+                    cat = Cat()
+                    camera_x = 0
+                    game_state = GAME_PLAYING
 
-        if not game_clear:
+        if game_state == GAME_PLAYING:
             # キー入力の処理
             keys = pygame.key.get_pressed()
             if keys[pygame.K_RIGHT]:
@@ -652,19 +698,32 @@ def main():
 
             # 猫の移動処理
             cat.move()
+            
+            # 障害物との衝突判定
+            cat_rect = pygame.Rect(cat.rect.x, cat.rect.y, cat.width - 20, cat.height)  # 猫の当たり判定を少し小さく
+            for obstacle in obstacles:
+                if cat_rect.colliderect(obstacle.rect):
+                    game_state = GAME_OVER
+                    break
 
             # ゴール判定（猫がドアに到達したかどうか）
             if cat.rect.x >= goal.door_x:
-                game_clear = True
+                game_state = GAME_CLEAR
 
         # 描画
         background.draw(screen, camera_x)
+        
+        # 障害物の描画
+        for obstacle in obstacles:
+            obstacle.draw(screen, camera_x)
+            
         goal.draw(screen, camera_x)
+        
         # 猫の描画
         cat.draw(screen, camera_x)
 
         # ゲームクリア時のメッセージ表示
-        if game_clear:
+        if game_state == GAME_CLEAR:
             # 英語のメッセージをフォールバックとして用意
             clear_text = font.render("Welcome Home!", True, (255, 215, 0))
             
@@ -678,6 +737,32 @@ def main():
                 
             text_rect = clear_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
             screen.blit(clear_text, text_rect)
+            
+            # リスタート案内
+            restart_text = small_font.render("Press R to Restart", True, (255, 255, 255))
+            restart_rect = restart_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 80))
+            screen.blit(restart_text, restart_rect)
+        
+        # ゲームオーバー時のメッセージ表示
+        elif game_state == GAME_OVER:
+            # 英語のメッセージをフォールバックとして用意
+            over_text = font.render("Game Over", True, (255, 0, 0))
+            
+            # 日本語フォントが利用可能かテスト
+            test_text = font.render("あ", True, (255, 0, 0))
+            test_width = test_text.get_width()
+            
+            # 日本語が正しく描画できる場合（幅が0より大きい）
+            if test_width > 0:
+                over_text = font.render("ゲームオーバー", True, (255, 0, 0))
+                
+            text_rect = over_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+            screen.blit(over_text, text_rect)
+            
+            # リスタート案内
+            restart_text = small_font.render("Press R to Restart", True, (255, 255, 255))
+            restart_rect = restart_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 80))
+            screen.blit(restart_text, restart_rect)
         
         pygame.display.flip()
         clock.tick(60)
