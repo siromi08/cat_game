@@ -70,7 +70,7 @@ class Obstacle:
 
 # カラス障害物クラス
 class CrowObstacle:
-    def __init__(self, x, y):
+    def __init__(self, x, y, is_tracking=False):
         self.width = 30
         self.height = 25
         self.x = x
@@ -80,9 +80,44 @@ class CrowObstacle:
         self.movement_speed = 1
         self.movement_range = 40
         self.movement_counter = random.randint(0, 100)  # ランダムな初期位置
+        
+        # 追尾機能の追加
+        self.is_tracking = is_tracking  # この個体が追尾するかどうか
+        self.tracking_range = 300  # この距離内に猫がいると追尾開始
+        self.tracking_speed = 2  # 追尾時の速度
+        self.is_currently_tracking = False  # 現在追尾中かどうか
     
-    def update(self):
-        # 上下の動き
+    def update(self, cat_x=None, cat_y=None):
+        # 追尾機能がある場合、猫との距離をチェック
+        if self.is_tracking and cat_x is not None and cat_y is not None:
+            distance_x = cat_x - self.x
+            distance_y = cat_y - self.y
+            distance = (distance_x ** 2 + distance_y ** 2) ** 0.5
+            
+            # 追尾範囲内なら追尾モードに
+            if distance < self.tracking_range:
+                self.is_currently_tracking = True
+                
+                # 猫の方向へ移動（X軸）
+                if distance_x > 0:
+                    self.x += self.tracking_speed
+                elif distance_x < 0:
+                    self.x -= self.tracking_speed
+                
+                # 猫の方向へ移動（Y軸）- 少し緩やかに
+                if distance_y > 0:
+                    self.y += self.tracking_speed * 0.7
+                elif distance_y < 0:
+                    self.y -= self.tracking_speed * 0.7
+                
+                # 矩形の更新
+                self.rect.x = self.x
+                self.rect.y = self.y
+                return
+            else:
+                self.is_currently_tracking = False
+        
+        # 追尾していない場合は通常の上下動作
         self.movement_counter += 1
         # 動きの範囲を大きくして、地面すれすれまで下がるように調整
         ground_level = WINDOW_HEIGHT - 40  # 地面の少し上
@@ -104,6 +139,11 @@ class CrowObstacle:
         if -self.width <= screen_x <= WINDOW_WIDTH:
             # カラスの体（黒）
             body_color = (20, 20, 20)
+            
+            # 追尾中のカラスは少し色を変える（赤みがかった黒）
+            if self.is_currently_tracking:
+                body_color = (50, 0, 0)
+                
             pygame.draw.ellipse(screen, body_color, (screen_x, self.y, self.width, self.height))
             
             # カラスの頭
@@ -120,7 +160,12 @@ class CrowObstacle:
             
             # 目（白）
             pygame.draw.circle(screen, (255, 255, 255), (screen_x + self.width, self.y + 7), 3)
-            pygame.draw.circle(screen, (0, 0, 0), (screen_x + self.width, self.y + 7), 1)  # 瞳
+            
+            # 目の色を変える（追尾中は赤い目に）
+            eye_color = (0, 0, 0)
+            if self.is_currently_tracking:
+                eye_color = (255, 0, 0)
+            pygame.draw.circle(screen, eye_color, (screen_x + self.width, self.y + 7), 1)  # 瞳
             
             # 翼（飛んでいる表現）
             wing_y = self.y + self.height // 2
@@ -746,11 +791,11 @@ def main():
         Obstacle(2500, WINDOW_HEIGHT - 10),  # 5つ目の障害物
     ]
     
-    # カラス障害物を配置（3羽）
+    # カラス障害物を配置（3羽）- 2番目のカラスを追尾型に
     crows = [
-        CrowObstacle(900, WINDOW_HEIGHT - 150),   # 1羽目のカラス（中間の高さから開始）
-        CrowObstacle(1500, WINDOW_HEIGHT - 120),  # 2羽目のカラス（低めの高さから開始）
-        CrowObstacle(2200, WINDOW_HEIGHT - 180),  # 3羽目のカラス（高めの高さから開始）
+        CrowObstacle(900, WINDOW_HEIGHT - 150),                  # 1羽目のカラス（通常）
+        CrowObstacle(1500, WINDOW_HEIGHT - 120, is_tracking=True),  # 2羽目のカラス（追尾型）
+        CrowObstacle(2200, WINDOW_HEIGHT - 180),                 # 3羽目のカラス（通常）
     ]
     
     camera_x = 0
@@ -783,7 +828,7 @@ def main():
             
             # カラスの更新
             for crow in crows:
-                crow.update()
+                crow.update(cat.rect.x, cat.rect.y)
             
             # 障害物との衝突判定
             cat_rect = pygame.Rect(cat.rect.x, cat.rect.y, cat.width - 20, cat.height)  # 猫の当たり判定を少し小さく
