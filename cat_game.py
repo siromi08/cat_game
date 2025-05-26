@@ -113,6 +113,53 @@ class Obstacle:
                         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
                         s.fill((255, 100, 100, alpha))
                         screen.blit(s, (screen_x + i * 5, self.y))
+                
+                # 突進中は2本足を生やす
+                leg_color = (139, 69, 19)  # 茶色の足
+                leg_width = 4
+                leg_height = 15
+                
+                # 足の動きをアニメーション化（走っているように）
+                leg_phase = math.sin(pygame.time.get_ticks() * 0.02) * 5
+                
+                # 左足
+                left_leg_x = screen_x + self.width * 0.3
+                if leg_phase > 0:
+                    # 左足を前に出す
+                    pygame.draw.line(screen, leg_color, 
+                                    (left_leg_x, self.y + self.height), 
+                                    (left_leg_x - 5, self.y + self.height + leg_height), 
+                                    leg_width)
+                else:
+                    # 左足を後ろに引く
+                    pygame.draw.line(screen, leg_color, 
+                                    (left_leg_x, self.y + self.height), 
+                                    (left_leg_x + 5, self.y + self.height + leg_height), 
+                                    leg_width)
+                
+                # 右足
+                right_leg_x = screen_x + self.width * 0.7
+                if leg_phase <= 0:
+                    # 右足を前に出す
+                    pygame.draw.line(screen, leg_color, 
+                                    (right_leg_x, self.y + self.height), 
+                                    (right_leg_x - 5, self.y + self.height + leg_height), 
+                                    leg_width)
+                else:
+                    # 右足を後ろに引く
+                    pygame.draw.line(screen, leg_color, 
+                                    (right_leg_x, self.y + self.height), 
+                                    (right_leg_x + 5, self.y + self.height + leg_height), 
+                                    leg_width)
+                
+                # 足の先（靴のような形）
+                pygame.draw.ellipse(screen, (50, 50, 50), 
+                                   (left_leg_x - 5 - 3 if leg_phase > 0 else left_leg_x + 5 - 3, 
+                                    self.y + self.height + leg_height - 3, 6, 4))
+                pygame.draw.ellipse(screen, (50, 50, 50), 
+                                   (right_leg_x - 5 - 3 if leg_phase <= 0 else right_leg_x + 5 - 3, 
+                                    self.y + self.height + leg_height - 3, 6, 4))
+                
             else:
                 # 通常時は普通のサイズで描画
                 pygame.draw.rect(screen, can_color, (screen_x, self.y, self.width, self.height))
