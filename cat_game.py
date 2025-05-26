@@ -67,6 +67,73 @@ class Obstacle:
             
             # 缶の影
             pygame.draw.ellipse(screen, (100, 100, 100), (screen_x - 2, self.y + self.height - 3, self.width + 4, 6))
+
+# カラス障害物クラス
+class CrowObstacle:
+    def __init__(self, x, y):
+        self.width = 30
+        self.height = 25
+        self.x = x
+        self.y = y
+        self.base_y = y  # 初期Y座標を保存
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.movement_speed = 1
+        self.movement_range = 40
+        self.movement_counter = random.randint(0, 100)  # ランダムな初期位置
+    
+    def update(self):
+        # 上下の動き
+        self.movement_counter += 1
+        offset = math.sin(self.movement_counter * 0.05) * self.movement_range
+        self.y = self.base_y + offset
+        self.rect.y = self.y
+    
+    def draw(self, screen, camera_x):
+        # 画面上の描画位置を計算
+        screen_x = self.x - camera_x
+        
+        # 画面内にある場合のみ描画
+        if -self.width <= screen_x <= WINDOW_WIDTH:
+            # カラスの体（黒）
+            body_color = (20, 20, 20)
+            pygame.draw.ellipse(screen, body_color, (screen_x, self.y, self.width, self.height))
+            
+            # カラスの頭
+            head_radius = 10
+            pygame.draw.circle(screen, body_color, (screen_x + self.width - 5, self.y + 10), head_radius)
+            
+            # くちばし（オレンジ）
+            beak_points = [
+                (screen_x + self.width + 5, self.y + 10),
+                (screen_x + self.width + 15, self.y + 12),
+                (screen_x + self.width + 5, self.y + 14)
+            ]
+            pygame.draw.polygon(screen, (255, 165, 0), beak_points)
+            
+            # 目（白）
+            pygame.draw.circle(screen, (255, 255, 255), (screen_x + self.width, self.y + 7), 3)
+            pygame.draw.circle(screen, (0, 0, 0), (screen_x + self.width, self.y + 7), 1)  # 瞳
+            
+            # 翼（飛んでいる表現）
+            wing_y = self.y + self.height // 2
+            wing_height = 10
+            wing_phase = math.sin(self.movement_counter * 0.2) * 5
+            
+            # 左翼
+            left_wing_points = [
+                (screen_x + 5, wing_y),
+                (screen_x - 15, wing_y - wing_height - wing_phase),
+                (screen_x - 5, wing_y + 5)
+            ]
+            pygame.draw.polygon(screen, body_color, left_wing_points)
+            
+            # 右翼
+            right_wing_points = [
+                (screen_x + self.width - 10, wing_y),
+                (screen_x + self.width + 15, wing_y - wing_height + wing_phase),
+                (screen_x + self.width - 5, wing_y + 5)
+            ]
+            pygame.draw.polygon(screen, body_color, right_wing_points)
 # 猫のキャラクター設定
 class Cat:
     def __init__(self):
@@ -671,6 +738,13 @@ def main():
         Obstacle(2500, WINDOW_HEIGHT - 10),  # 5つ目の障害物
     ]
     
+    # カラス障害物を配置（3羽）
+    crows = [
+        CrowObstacle(900, WINDOW_HEIGHT - 200),   # 1羽目のカラス（高い位置）
+        CrowObstacle(1500, WINDOW_HEIGHT - 150),  # 2羽目のカラス（中間の高さ）
+        CrowObstacle(2200, WINDOW_HEIGHT - 250),  # 3羽目のカラス（より高い位置）
+    ]
+    
     camera_x = 0
     game_state = GAME_PLAYING
 
@@ -699,12 +773,25 @@ def main():
             # 猫の移動処理
             cat.move()
             
+            # カラスの更新
+            for crow in crows:
+                crow.update()
+            
             # 障害物との衝突判定
             cat_rect = pygame.Rect(cat.rect.x, cat.rect.y, cat.width - 20, cat.height)  # 猫の当たり判定を少し小さく
+            
+            # 空き缶との衝突判定
             for obstacle in obstacles:
                 if cat_rect.colliderect(obstacle.rect):
                     game_state = GAME_OVER
                     break
+            
+            # カラスとの衝突判定
+            if game_state == GAME_PLAYING:  # 空き缶との衝突がなかった場合のみ
+                for crow in crows:
+                    if cat_rect.colliderect(crow.rect):
+                        game_state = GAME_OVER
+                        break
 
             # ゴール判定（猫がドアに到達したかどうか）
             if cat.rect.x >= goal.door_x:
@@ -716,6 +803,10 @@ def main():
         # 障害物の描画
         for obstacle in obstacles:
             obstacle.draw(screen, camera_x)
+        
+        # カラスの描画
+        for crow in crows:
+            crow.draw(screen, camera_x)
             
         goal.draw(screen, camera_x)
         
