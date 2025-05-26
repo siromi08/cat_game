@@ -42,12 +42,50 @@ GAME_CLEAR = 1
 GAME_OVER = 2
 # 障害物クラス
 class Obstacle:
-    def __init__(self, x, y):
+    def __init__(self, x, y, is_rushing=False):
         self.width = 20
         self.height = 30
         self.x = x
         self.y = y - self.height  # 地面からの高さを調整
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        
+        # 突進機能の追加
+        self.is_rushing = is_rushing  # この個体が突進するかどうか
+        self.rushing_range = 300  # この距離内に猫がいると突進開始（200から300に変更）
+        self.rushing_speed = 8  # 突進時の速度
+        self.is_currently_rushing = False  # 現在突進中かどうか
+        self.rush_cooldown = 0  # 突進後のクールダウン
+        self.max_cooldown = 60  # 突進後のクールダウン時間（フレーム数）
+    
+    def update(self, cat_x=None, cat_y=None):
+        # 突進機能がある場合、猫との距離をチェック
+        if self.is_rushing and cat_x is not None and cat_y is not None:
+            # クールダウン中なら何もしない
+            if self.rush_cooldown > 0:
+                self.rush_cooldown -= 1
+                return
+                
+            distance_x = cat_x - self.x
+            distance_y = cat_y - self.y
+            distance = (distance_x ** 2 + distance_y ** 2) ** 0.5
+            
+            # 突進範囲内かつ猫が左側から近づいてきた場合、または既に突進中の場合は突進を続ける
+            if (distance < self.rushing_range and distance_x < 0) or self.is_currently_rushing:
+                self.is_currently_rushing = True
+                
+                # 左方向に突進（猫の反対方向）- 速度を大幅に上げる
+                self.x -= 15  # 突進速度を15に増加（元の約2倍）
+                
+                # 一定距離突進したらクールダウンに入る
+                if cat_x - self.x > 300:  # 猫から300ピクセル以上離れたら停止
+                    self.is_currently_rushing = False
+                    self.rush_cooldown = self.max_cooldown
+                
+                # 矩形の更新
+                self.rect.x = self.x
+                return
+            else:
+                self.is_currently_rushing = False
     
     def draw(self, screen, camera_x):
         # 画面上の描画位置を計算
@@ -57,16 +95,45 @@ class Obstacle:
         if -self.width <= screen_x <= WINDOW_WIDTH:
             # 空き缶の本体（シルバー）
             can_color = (192, 192, 192)
-            pygame.draw.rect(screen, can_color, (screen_x, self.y, self.width, self.height))
+            
+            # 突進中の空き缶は色を変える（より鮮明な赤色）
+            if self.is_currently_rushing:
+                can_color = (255, 100, 100)  # より鮮明な赤色に変更
+                
+                # 突進中は缶を少し大きく表示
+                width_boost = 10
+                height_boost = 5
+                pygame.draw.rect(screen, can_color, (screen_x - width_boost/2, self.y - height_boost/2, 
+                                                   self.width + width_boost, self.height + height_boost))
+                
+                # 突進エフェクト（後ろに残像）
+                for i in range(1, 4):
+                    alpha = 150 - i * 40  # 徐々に薄くなる
+                    if alpha > 0:
+                        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+                        s.fill((255, 100, 100, alpha))
+                        screen.blit(s, (screen_x + i * 5, self.y))
+            else:
+                # 通常時は普通のサイズで描画
+                pygame.draw.rect(screen, can_color, (screen_x, self.y, self.width, self.height))
             
             # 缶の上部（赤）
-            pygame.draw.rect(screen, (220, 50, 50), (screen_x, self.y, self.width, 5))
+            top_color = (220, 50, 50)
+            if self.is_currently_rushing:
+                top_color = (255, 0, 0)  # 突進中はより鮮やかな赤に
+            pygame.draw.rect(screen, top_color, (screen_x, self.y, self.width, 5))
             
             # 缶の模様（簡易的なデザイン）
-            pygame.draw.rect(screen, (100, 100, 100), (screen_x, self.y + self.height // 2 - 5, self.width, 10))
+            pattern_color = (100, 100, 100)
+            if self.is_currently_rushing:
+                pattern_color = (150, 50, 50)  # 突進中は赤っぽく
+            pygame.draw.rect(screen, pattern_color, (screen_x, self.y + self.height // 2 - 5, self.width, 10))
             
             # 缶の影
-            pygame.draw.ellipse(screen, (100, 100, 100), (screen_x - 2, self.y + self.height - 3, self.width + 4, 6))
+            shadow_color = (100, 100, 100)
+            if self.is_currently_rushing:
+                shadow_color = (150, 50, 50)  # 突進中は赤っぽく
+            pygame.draw.ellipse(screen, shadow_color, (screen_x - 2, self.y + self.height - 3, self.width + 4, 6))
 
 # カラス障害物クラス
 class CrowObstacle:
@@ -782,13 +849,13 @@ def main():
     background = Background()
     goal = Goal()
     
-    # 障害物を配置（5つの空き缶）
+    # 障害物を配置（5つの空き缶）- 5番目の空き缶を突進型に変更（ゴール終盤の位置に）
     obstacles = [
-        Obstacle(400, WINDOW_HEIGHT - 10),   # 最初の障害物
-        Obstacle(700, WINDOW_HEIGHT - 10),   # 2つ目の障害物
-        Obstacle(1200, WINDOW_HEIGHT - 10),  # 3つ目の障害物
-        Obstacle(1800, WINDOW_HEIGHT - 10),  # 4つ目の障害物
-        Obstacle(2500, WINDOW_HEIGHT - 10),  # 5つ目の障害物
+        Obstacle(400, WINDOW_HEIGHT - 10),                # 1番目の障害物（通常）
+        Obstacle(700, WINDOW_HEIGHT - 10),                # 2番目の障害物（通常）
+        Obstacle(1200, WINDOW_HEIGHT - 10),               # 3番目の障害物（通常）
+        Obstacle(1800, WINDOW_HEIGHT - 10),               # 4番目の障害物（通常）
+        Obstacle(2500, WINDOW_HEIGHT - 10, is_rushing=True),  # 5番目の障害物（突進型）- ゴール終盤の位置
     ]
     
     # カラス障害物を配置（3羽）- 2番目のカラスを追尾型に
@@ -814,6 +881,23 @@ def main():
                     # ゲームをリセット
                     cat = Cat()
                     camera_x = 0
+                    
+                    # 障害物を初期位置に戻す
+                    obstacles = [
+                        Obstacle(400, WINDOW_HEIGHT - 10),                # 1番目の障害物（通常）
+                        Obstacle(700, WINDOW_HEIGHT - 10),                # 2番目の障害物（通常）
+                        Obstacle(1200, WINDOW_HEIGHT - 10),               # 3番目の障害物（通常）
+                        Obstacle(1800, WINDOW_HEIGHT - 10),               # 4番目の障害物（通常）
+                        Obstacle(2500, WINDOW_HEIGHT - 10, is_rushing=True),  # 5番目の障害物（突進型）
+                    ]
+                    
+                    # カラスも初期位置に戻す
+                    crows = [
+                        CrowObstacle(900, WINDOW_HEIGHT - 150),                  # 1羽目のカラス（通常）
+                        CrowObstacle(1500, WINDOW_HEIGHT - 120, is_tracking=True),  # 2羽目のカラス（追尾型）
+                        CrowObstacle(2200, WINDOW_HEIGHT - 180),                 # 3羽目のカラス（通常）
+                    ]
+                    
                     game_state = GAME_PLAYING
 
         if game_state == GAME_PLAYING:
@@ -829,6 +913,11 @@ def main():
             # カラスの更新
             for crow in crows:
                 crow.update(cat.rect.x, cat.rect.y)
+                
+            # 空き缶の更新（突進機能を持つものがあれば）
+            for obstacle in obstacles:
+                if hasattr(obstacle, 'update'):
+                    obstacle.update(cat.rect.x, cat.rect.y)
             
             # 障害物との衝突判定
             cat_rect = pygame.Rect(cat.rect.x, cat.rect.y, cat.width - 20, cat.height)  # 猫の当たり判定を少し小さく
