@@ -84,8 +84,16 @@ class CrowObstacle:
     def update(self):
         # 上下の動き
         self.movement_counter += 1
-        offset = math.sin(self.movement_counter * 0.05) * self.movement_range
-        self.y = self.base_y + offset
+        # 動きの範囲を大きくして、地面すれすれまで下がるように調整
+        ground_level = WINDOW_HEIGHT - 40  # 地面の少し上
+        max_height = self.base_y - 100  # 最高高度
+        
+        # 動きの振幅を大きくし、地面すれすれまで下がるようにする
+        height_range = ground_level - max_height
+        offset = math.sin(self.movement_counter * 0.03) * (height_range / 2)
+        mid_point = (ground_level + max_height) / 2
+        
+        self.y = mid_point + offset
         self.rect.y = self.y
     
     def draw(self, screen, camera_x):
@@ -740,9 +748,9 @@ def main():
     
     # カラス障害物を配置（3羽）
     crows = [
-        CrowObstacle(900, WINDOW_HEIGHT - 200),   # 1羽目のカラス（高い位置）
-        CrowObstacle(1500, WINDOW_HEIGHT - 150),  # 2羽目のカラス（中間の高さ）
-        CrowObstacle(2200, WINDOW_HEIGHT - 250),  # 3羽目のカラス（より高い位置）
+        CrowObstacle(900, WINDOW_HEIGHT - 150),   # 1羽目のカラス（中間の高さから開始）
+        CrowObstacle(1500, WINDOW_HEIGHT - 120),  # 2羽目のカラス（低めの高さから開始）
+        CrowObstacle(2200, WINDOW_HEIGHT - 180),  # 3羽目のカラス（高めの高さから開始）
     ]
     
     camera_x = 0
