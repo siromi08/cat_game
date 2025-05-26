@@ -140,9 +140,9 @@ class CrowObstacle:
             # カラスの体（黒）
             body_color = (20, 20, 20)
             
-            # 追尾中のカラスは少し色を変える（赤みがかった黒）
+            # 追尾中のカラスは色を変える（濃い赤色）
             if self.is_currently_tracking:
-                body_color = (50, 0, 0)
+                body_color = (180, 0, 0)  # より濃い赤色に変更
                 
             pygame.draw.ellipse(screen, body_color, (screen_x, self.y, self.width, self.height))
             
