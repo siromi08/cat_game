@@ -126,3 +126,134 @@ python3 cat_game.py
 ## 作者
 
 [siromi08](https://github.com/siromi08)
+
+---
+
+# Cat Adventure Game
+
+Cat Adventure is a simple 2D game where you control a cat character and avoid obstacles to reach home.
+
+## Game Overview
+
+You play as a cat, avoiding obstacles (cans and crows) on the road while trying to reach the front door of a house on the right side.
+There are several types of obstacles:
+- Regular cans: Stationary obstacles
+- Rushing cans: Special obstacles that transform into muscular characters and run away when the cat approaches
+- Regular crows: Flying obstacles that move up and down
+- Tracking crows: Special flying obstacles that chase the cat when they detect it
+
+## Development Environment
+
+This game was developed using:
+- Python 3.x
+- Pygame 2.x
+- Cross-platform compatible (Linux/Windows/macOS)
+
+## Installation Instructions
+
+### 1. Installing Python
+
+#### Windows
+1. Download the installer from the [Python official website](https://www.python.org/downloads/)
+2. Run the installer (recommended to check "Add Python to PATH")
+3. Verify installation by running `python --version` in the command prompt
+
+#### macOS
+1. If you have Homebrew installed: `brew install python`
+2. Or download the installer from the [Python official website](https://www.python.org/downloads/)
+3. Verify installation by running `python3 --version` in the terminal
+
+#### Linux
+1. Python is pre-installed on many distributions
+2. Ubuntu/Debian: `sudo apt-get install python3`
+3. Fedora: `sudo dnf install python3`
+4. Verify installation by running `python3 --version` in the terminal
+
+### 2. Installing Pygame
+
+After Python is installed, install Pygame with the following command:
+
+```bash
+# Windows
+pip install pygame
+
+# macOS/Linux
+pip3 install pygame
+```
+
+To verify the installation:
+```bash
+# Windows
+python -c "import pygame; print(pygame.ver)"
+
+# macOS/Linux
+python3 -c "import pygame; print(pygame.ver)"
+```
+
+### 3. Downloading the Game
+
+Clone the repository from GitHub or download it as a ZIP file:
+
+```bash
+git clone https://github.com/siromi08/cat_game.git
+cd cat_game
+```
+
+Or download from the [repository page](https://github.com/siromi08/cat_game) by clicking "Code" → "Download ZIP" and extract it.
+
+## How to Run the Game
+
+In the directory containing the game file, run the following command:
+
+```bash
+# Windows
+python cat_game.py
+
+# macOS/Linux
+python3 cat_game.py
+```
+
+## Controls
+
+- **Right Arrow Key**: Move the cat to the right
+- **Up Arrow Key**: Jump (used to avoid obstacles)
+- **R Key**: Restart after game over or game clear
+
+## Game Objective
+
+- Progress while avoiding obstacles (cans and crows) on the road
+- Reach the front door of the house on the right
+- Hitting an obstacle results in game over
+- Reaching the goal displays "Welcome Home!" and completes the game
+
+## Special Obstacles
+
+### Rushing Cans
+- Detect when the cat approaches from the left and start rushing
+- Transform into muscular characters when rushing
+- Grow arms and legs, and run away to the left with an angry expression
+- Discover which cans are the rushing type while playing!
+
+### Tracking Crows
+- Start tracking when the cat enters within a certain distance
+- Body color changes to red when tracking
+- Move to follow the cat
+- Discover which crows are the tracking type while playing!
+
+## Developer Information
+
+To customize or extend the game, edit the `cat_game.py` file. Main classes and features:
+
+- `Cat`: Cat character class
+- `Obstacle`: Obstacle (can) class
+- `CrowObstacle`: Crow obstacle class
+- `Goal`: Goal (house) class
+- `Background`: Background class
+
+## License
+
+This game can be freely used, modified, and distributed.
+
+## Author
+
+[siromi08](https://github.com/siromi08)
