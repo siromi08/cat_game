@@ -235,9 +235,9 @@ class Goal:
         house_x = self.x - camera_x
         house_y = self.y
         
-        # 家の本体（薄いベージュ色）
+        # 家の本体（灰色に変更）
         house_rect = pygame.Rect(house_x, house_y, self.width, self.height)
-        pygame.draw.rect(screen, (245, 222, 179), house_rect)
+        pygame.draw.rect(screen, (180, 180, 180), house_rect)
         
         # 屋根（茶色）
         roof_points = [
