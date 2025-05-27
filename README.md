@@ -11,6 +11,8 @@
 - 通常のカラス：上下に動く飛行障害物
 - 追尾型のカラス：猫を見つけると追いかけてくる特殊な飛行障害物
 
+ゲームにはほのぼのとしたBGMが流れ、プレイ体験を豊かにします。
+
 ## 開発環境
 
 このゲームは以下の環境で開発されています：
@@ -57,6 +59,27 @@ python -c "import pygame; print(pygame.ver)"
 
 # macOS/Linux
 python3 -c "import pygame; print(pygame.ver)"
+```
+
+### 3. NumPyのインストール
+
+BGM機能のために、NumPyライブラリも必要です：
+
+```bash
+# Windows
+pip install numpy
+
+# macOS/Linux
+pip3 install numpy
+```
+
+インストールを確認するには：
+```bash
+# Windows
+python -c "import numpy; print(numpy.__version__)"
+
+# macOS/Linux
+python3 -c "import numpy; print(numpy.__version__)"
 ```
 
 ### 3. ゲームのダウンロード
@@ -142,6 +165,8 @@ There are several types of obstacles:
 - Regular crows: Flying obstacles that move up and down
 - Tracking crows: Special flying obstacles that chase the cat when they detect it
 
+The game features a relaxing background music that enhances the playing experience.
+
 ## Development Environment
 
 This game was developed using:
@@ -188,6 +213,27 @@ python -c "import pygame; print(pygame.ver)"
 
 # macOS/Linux
 python3 -c "import pygame; print(pygame.ver)"
+```
+
+### 3. Installing NumPy
+
+NumPy library is required for the BGM functionality:
+
+```bash
+# Windows
+pip install numpy
+
+# macOS/Linux
+pip3 install numpy
+```
+
+To verify the installation:
+```bash
+# Windows
+python -c "import numpy; print(numpy.__version__)"
+
+# macOS/Linux
+python3 -c "import numpy; print(numpy.__version__)"
 ```
 
 ### 3. Downloading the Game
