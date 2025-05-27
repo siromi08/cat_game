@@ -10,6 +10,7 @@ os.environ['LANG'] = 'ja_JP.UTF-8'
 
 # Pygameの初期化
 pygame.init()
+pygame.mixer.init(frequency=44100, size=-16, channels=1, buffer=512)
 
 # 画面設定
 WINDOW_WIDTH = 800
@@ -1066,6 +1067,18 @@ class Background:
                                 (grass_x, WINDOW_HEIGHT - 50 - grass_height), 2)
 def main():
     clock = pygame.time.Clock()
+    
+    # BGMを再生
+    try:
+        # bgm.pyからBGMを生成
+        from bgm import create_relaxing_bgm
+        bgm = create_relaxing_bgm()
+        bgm.set_volume(0.5)  # 音量を調整（0.0〜1.0）
+        bgm.play(loops=-1)  # -1でループ再生
+        print("BGM started playing")
+    except Exception as e:
+        print(f"Warning: Could not play BGM: {e}")
+    
     cat = Cat()
     background = Background()
     goal = Goal()
