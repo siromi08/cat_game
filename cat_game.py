@@ -131,6 +131,44 @@ class Obstacle:
                         s.fill((255, 100, 100, alpha))
                         screen.blit(s, (screen_x + i * 5, self.y))
                 
+                # 「パワー！！！」の吹き出しを表示
+                # 吹き出しの背景（白い楕円）
+                bubble_width = 80
+                bubble_height = 30
+                bubble_x = screen_x - bubble_width // 2
+                bubble_y = self.y - bubble_height - 10
+                
+                # 吹き出しの背景
+                pygame.draw.ellipse(screen, (255, 255, 255), 
+                                   (bubble_x, bubble_y, bubble_width, bubble_height))
+                
+                # 吹き出しの枠線
+                pygame.draw.ellipse(screen, (0, 0, 0), 
+                                   (bubble_x, bubble_y, bubble_width, bubble_height), 2)
+                
+                # 吹き出しの尻尾
+                tail_points = [
+                    (bubble_x + bubble_width // 2 - 10, bubble_y + bubble_height - 2),
+                    (screen_x + self.width // 2, self.y),
+                    (bubble_x + bubble_width // 2 + 10, bubble_y + bubble_height - 2)
+                ]
+                pygame.draw.polygon(screen, (255, 255, 255), tail_points)
+                pygame.draw.polygon(screen, (0, 0, 0), tail_points, 2)
+                
+                # 「パワー！！！」のテキスト
+                try:
+                    # 日本語フォントを使用
+                    font = pygame.font.Font(FONT_PATH, 14)
+                    text = font.render("パワー！！！", True, (0, 0, 0))
+                    text_rect = text.get_rect(center=(bubble_x + bubble_width // 2, bubble_y + bubble_height // 2))
+                    screen.blit(text, text_rect)
+                except Exception:
+                    # フォントが読み込めない場合は英語で表示
+                    font = pygame.font.Font(None, 14)
+                    text = font.render("POWER!!!", True, (0, 0, 0))
+                    text_rect = text.get_rect(center=(bubble_x + bubble_width // 2, bubble_y + bubble_height // 2))
+                    screen.blit(text, text_rect)
+                
                 # アニメーションのための時間ベースの値
                 time_val = pygame.time.get_ticks() * 0.02
                 leg_phase = math.sin(time_val) * 5
