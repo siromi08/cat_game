@@ -96,15 +96,32 @@ class Obstacle:
             # 空き缶の本体（シルバー）
             can_color = (192, 192, 192)
             
-            # 突進中の空き缶は色を変える（より鮮明な赤色）
+            # 突進中の空き缶は色を変える（より鮮明な赤色）とマッチョになる
             if self.is_currently_rushing:
                 can_color = (255, 100, 100)  # より鮮明な赤色に変更
                 
-                # 突進中は缶を少し大きく表示
+                # 突進中は缶を少し大きく表示（マッチョな体型）
                 width_boost = 10
                 height_boost = 5
-                pygame.draw.rect(screen, can_color, (screen_x - width_boost/2, self.y - height_boost/2, 
-                                                   self.width + width_boost, self.height + height_boost))
+                body_rect = pygame.Rect(screen_x - width_boost/2, self.y - height_boost/2, 
+                                      self.width + width_boost, self.height + height_boost)
+                pygame.draw.rect(screen, can_color, body_rect)
+                
+                # 筋肉の表現（胸筋）
+                muscle_color = (220, 80, 80)  # 筋肉の色（赤みがかった色）
+                pygame.draw.arc(screen, muscle_color, 
+                               (screen_x, self.y + 5, self.width/2, self.height/2), 
+                               math.pi*0.5, math.pi*1.5, 3)
+                pygame.draw.arc(screen, muscle_color, 
+                               (screen_x + self.width/2, self.y + 5, self.width/2, self.height/2), 
+                               math.pi*1.5, math.pi*2.5, 3)
+                
+                # 腹筋の表現
+                for i in range(3):
+                    pygame.draw.line(screen, muscle_color,
+                                    (screen_x + 5, self.y + self.height/2 + i*5),
+                                    (screen_x + self.width - 5, self.y + self.height/2 + i*5),
+                                    2)
                 
                 # 突進エフェクト（後ろに残像）
                 for i in range(1, 4):
@@ -114,13 +131,15 @@ class Obstacle:
                         s.fill((255, 100, 100, alpha))
                         screen.blit(s, (screen_x + i * 5, self.y))
                 
+                # アニメーションのための時間ベースの値
+                time_val = pygame.time.get_ticks() * 0.02
+                leg_phase = math.sin(time_val) * 5
+                arm_phase = math.cos(time_val) * 5  # 腕は足と逆のタイミングで動く
+                
                 # 突進中は2本足を生やす
                 leg_color = (139, 69, 19)  # 茶色の足
                 leg_width = 4
                 leg_height = 15
-                
-                # 足の動きをアニメーション化（走っているように）
-                leg_phase = math.sin(pygame.time.get_ticks() * 0.02) * 5
                 
                 # 左足
                 left_leg_x = screen_x + self.width * 0.3
@@ -160,6 +179,85 @@ class Obstacle:
                                    (right_leg_x - 5 - 3 if leg_phase <= 0 else right_leg_x + 5 - 3, 
                                     self.y + self.height + leg_height - 3, 6, 4))
                 
+                # マッチョな腕を追加
+                arm_color = (220, 150, 150)  # 腕の色
+                arm_width = 6  # 太い腕
+                
+                # 左腕（筋肉質）
+                left_arm_x = screen_x - 2
+                left_arm_y = self.y + self.height * 0.3
+                if arm_phase > 0:
+                    # 左腕を前に振る
+                    pygame.draw.line(screen, arm_color, 
+                                    (left_arm_x, left_arm_y), 
+                                    (left_arm_x - 15, left_arm_y + 5), 
+                                    arm_width)
+                    # 二の腕の筋肉表現
+                    pygame.draw.ellipse(screen, arm_color, 
+                                       (left_arm_x - 12, left_arm_y - 2, 10, 8))
+                else:
+                    # 左腕を後ろに振る
+                    pygame.draw.line(screen, arm_color, 
+                                    (left_arm_x, left_arm_y), 
+                                    (left_arm_x - 10, left_arm_y + 15), 
+                                    arm_width)
+                    # 二の腕の筋肉表現
+                    pygame.draw.ellipse(screen, arm_color, 
+                                       (left_arm_x - 8, left_arm_y + 5, 10, 8))
+                
+                # 右腕（筋肉質）
+                right_arm_x = screen_x + self.width + 2
+                right_arm_y = self.y + self.height * 0.3
+                if arm_phase <= 0:
+                    # 右腕を前に振る
+                    pygame.draw.line(screen, arm_color, 
+                                    (right_arm_x, right_arm_y), 
+                                    (right_arm_x + 15, right_arm_y + 5), 
+                                    arm_width)
+                    # 二の腕の筋肉表現
+                    pygame.draw.ellipse(screen, arm_color, 
+                                       (right_arm_x + 2, right_arm_y - 2, 10, 8))
+                else:
+                    # 右腕を後ろに振る
+                    pygame.draw.line(screen, arm_color, 
+                                    (right_arm_x, right_arm_y), 
+                                    (right_arm_x + 10, right_arm_y + 15), 
+                                    arm_width)
+                    # 二の腕の筋肉表現
+                    pygame.draw.ellipse(screen, arm_color, 
+                                       (right_arm_x - 2, right_arm_y + 5, 10, 8))
+                
+                # 拳（こぶし）
+                pygame.draw.circle(screen, (220, 150, 150), 
+                                  (left_arm_x - 15 if arm_phase > 0 else left_arm_x - 10, 
+                                   left_arm_y + 5 if arm_phase > 0 else left_arm_y + 15), 5)
+                pygame.draw.circle(screen, (220, 150, 150), 
+                                  (right_arm_x + 15 if arm_phase <= 0 else right_arm_x + 10, 
+                                   right_arm_y + 5 if arm_phase <= 0 else right_arm_y + 15), 5)
+                
+                # 顔の表情（怒った表情）
+                # 目
+                eye_color = (255, 255, 255)  # 白目
+                pygame.draw.circle(screen, eye_color, (screen_x + self.width * 0.3, self.y + 8), 4)
+                pygame.draw.circle(screen, eye_color, (screen_x + self.width * 0.7, self.y + 8), 4)
+                
+                # 黒目（怒った感じに）
+                pygame.draw.circle(screen, (0, 0, 0), (screen_x + self.width * 0.3 - 1, self.y + 8), 2)
+                pygame.draw.circle(screen, (0, 0, 0), (screen_x + self.width * 0.7 - 1, self.y + 8), 2)
+                
+                # 眉毛（怒った表情）
+                pygame.draw.line(screen, (0, 0, 0), 
+                                (screen_x + self.width * 0.2, self.y + 4), 
+                                (screen_x + self.width * 0.4, self.y + 6), 2)
+                pygame.draw.line(screen, (0, 0, 0), 
+                                (screen_x + self.width * 0.6, self.y + 6), 
+                                (screen_x + self.width * 0.8, self.y + 4), 2)
+                
+                # 口（怒った表情）
+                pygame.draw.arc(screen, (0, 0, 0), 
+                               (screen_x + self.width * 0.3, self.y + 12, self.width * 0.4, 8), 
+                               math.pi, math.pi * 2, 2)
+                
             else:
                 # 通常時は普通のサイズで描画
                 pygame.draw.rect(screen, can_color, (screen_x, self.y, self.width, self.height))
@@ -170,11 +268,10 @@ class Obstacle:
                 top_color = (255, 0, 0)  # 突進中はより鮮やかな赤に
             pygame.draw.rect(screen, top_color, (screen_x, self.y, self.width, 5))
             
-            # 缶の模様（簡易的なデザイン）
-            pattern_color = (100, 100, 100)
-            if self.is_currently_rushing:
-                pattern_color = (150, 50, 50)  # 突進中は赤っぽく
-            pygame.draw.rect(screen, pattern_color, (screen_x, self.y + self.height // 2 - 5, self.width, 10))
+            # 缶の模様（簡易的なデザイン）- 突進中は筋肉で隠れるので通常時のみ
+            if not self.is_currently_rushing:
+                pattern_color = (100, 100, 100)
+                pygame.draw.rect(screen, pattern_color, (screen_x, self.y + self.height // 2 - 5, self.width, 10))
             
             # 缶の影
             shadow_color = (100, 100, 100)
@@ -301,6 +398,45 @@ class CrowObstacle:
                 (screen_x + self.width - 5, wing_y + 5)
             ]
             pygame.draw.polygon(screen, body_color, right_wing_points)
+            
+            # 追尾中は「まてーー！」の吹き出しを表示
+            if self.is_currently_tracking:
+                # 吹き出しの背景（白い楕円）
+                bubble_width = 70
+                bubble_height = 30
+                bubble_x = screen_x + self.width - bubble_width // 2
+                bubble_y = self.y - bubble_height - 5
+                
+                # 吹き出しの背景
+                pygame.draw.ellipse(screen, (255, 255, 255), 
+                                   (bubble_x, bubble_y, bubble_width, bubble_height))
+                
+                # 吹き出しの枠線
+                pygame.draw.ellipse(screen, (0, 0, 0), 
+                                   (bubble_x, bubble_y, bubble_width, bubble_height), 2)
+                
+                # 吹き出しの尻尾
+                tail_points = [
+                    (bubble_x + bubble_width // 2, bubble_y + bubble_height - 2),
+                    (screen_x + self.width, self.y),
+                    (bubble_x + bubble_width // 2 + 15, bubble_y + bubble_height - 2)
+                ]
+                pygame.draw.polygon(screen, (255, 255, 255), tail_points)
+                pygame.draw.polygon(screen, (0, 0, 0), tail_points, 2)
+                
+                # 「まてーー！」のテキスト
+                try:
+                    # 日本語フォントを使用
+                    font = pygame.font.Font(FONT_PATH, 14)
+                    text = font.render("まてーー！", True, (0, 0, 0))
+                    text_rect = text.get_rect(center=(bubble_x + bubble_width // 2, bubble_y + bubble_height // 2))
+                    screen.blit(text, text_rect)
+                except Exception:
+                    # フォントが読み込めない場合は英語で表示
+                    font = pygame.font.Font(None, 14)
+                    text = font.render("Wait!!", True, (0, 0, 0))
+                    text_rect = text.get_rect(center=(bubble_x + bubble_width // 2, bubble_y + bubble_height // 2))
+                    screen.blit(text, text_rect)
 # 猫のキャラクター設定
 class Cat:
     def __init__(self):
